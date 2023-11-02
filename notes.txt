@@ -1,0 +1,238 @@
+#largest number in aaray
+Let N = 06h
+mov r3,#6 //length of the array
+mov dptr,#4000H //starting address of array
+movx a,@dptr
+mov r1,a
+nextbyte: inc dptr
+movx a,@dptr
+clr c //reset borrow flag
+mov r2,a //next number in the array
+subb a,r1 //other Num-Prev largest no.
+jc skip // JNC FOR SMALLEST ELEMENT
+mov a,r2 //update larger number in r1
+mov r1,a
+skip: djnz r3,nextbyte
+mov dptr, #4062H //location of the result-4062h
+mov a,r1 //largest number
+movx @dptr,a //store at #4062H
+end
+
+
+d. Write an assembly language program to sort an array of N =____ h bytes
+of data in ascending/descending order stored from location 9000h.
+(Using bubble sort algorithm)
+Let N = 06h
+mov r0,#05H //count (N-1) array size = N
+loop1: mov dptr, #9000h //array stored from address 9000h
+mov r1,#05h //initialize exchange counter
+loop2: movx a, @dptr //get number from array and store in B register
+mov b, a
+inc dptr
+movx a, @dptr //next number in the array
+clr c //reset borrow flag
+mov r2, a //store in R2
+subb a, b //2nd-1st No, since no compare instruction in 8051
+jnc noexchg // JC - FOR DESCENDING ORDER
+mov a,b //exchange the 2 nos in the array
+movx @dptr,a
+dec dpl //DEC DPTR - instruction not present
+mov a,r2
+movx @dptr,a
+inc dptr
+noexchg: djnz r1,loop2 //decrement compare counter
+djnz r0,loop1 //decrement pass counter
+end
+
+
+
+Write an assembly language program to perform the multiplication of
+two 16-bit numbers.
+mov r0,#34h // 5678*1234
+mov r1,#12h
+mov r2,#78h
+mov r3,#56h
+mov a,r0
+mov b,r2
+mul ab
+mov 33h,a
+mov r4,b
+mov a,r0
+mov b,r3
+mul ab
+add a,r4
+mov r5,a
+mov a,b
+addc a,#00h
+mov r6,a
+mov a,r1
+mov b,r2
+mul ab
+add a,r5
+mov 32h,a
+mov a,b
+addc a,r6
+mov 00h,c
+mov r7,a
+mov a,r3
+mov b,r1
+mul ab
+add a,r7
+mov 31h,a
+mov a,b
+addc a,20h
+
+
+##adc interfacing
+ORG 0000H
+	MOV TMOD,#01H          // FOR TIMER 0 MODE 1
+MOV P1,#0ffh              // MAKING P1 AS INPUT PORT 
+MOV P0,#00h              // MAKING P0 AS OUTPUT PORT
+MAIN: CLR P3.7           //ENABLING CHIP SELECT
+SETB P3.6                //SET RD
+CLR P3.5                 //TO START THE CONVERSION
+SETB P3.5       
+WAIT: JB P3.4, WAIT      // WAIT FOR COMPLETING THE CONVERSION
+CLR P3.7             
+CLR P3.6 
+ACALL DELAY             //CALLING A DELAY OF 1 SEC 
+MOV A, P1
+MOV P0, A
+ACALL DELAY
+SETB P3.4
+SJMP MAIN
+ DELAY: MOV R1,#20
+			REPEAT:MOV TH0,#3CH
+			MOV TL0,#0B0H
+			SETB TR0
+			CHECK:JNB TF0,CHECK
+			CLR TR0
+			CLR TF0
+			DJNZ R1,REPEAT
+			RET
+END
+
+
+
+e. Write an assembly language program to find the cube of a given
+number.
+mov r0,#0fh // r0 = given number to find the cube of it.
+mov a,r0
+mov b,r0
+mul ab
+mov r1,b
+mov b,r0
+mul ab
+mov 32h,a
+mov r2,b
+mov a,r1
+mov b,r0
+mul ab
+add a,r2
+mov 31h,a
+mov a,b
+addc a,#00h
+mov 30h,a //result is stored in 30h, 31h, 32h
+end
+
+
+Write a Program to check whether given number is palindrome or not. If
+palindrome store FFh in accumulator else store 00h in accumulator.
+mov 30h,#81h
+mov r0,30h
+mov r1,#08h
+mov 31h,#00h
+clr c
+back: mov a,30h
+rlc a
+mov 30h,a
+mov a,31h
+rrc a
+mov 31h,a
+djnz r1,back
+cjne a,00h,npal
+mov a,#0ffh
+sjmp next
+npal: mov a,#00h
+next: end
+
+a. Write an assembly language program to implement (display) an eight bit
+UP/DOWN binary (hex) counter on watch window.
+mov a,#00 //mov a, #0ffh for down counter
+back: acall delay
+inc a //dec a for binary down counter
+jnz back
+here: sjmp here
+delay: mov r1,#0ffh
+decr1: mov r2,#0ffh
+decr: mov r3,#0ffh
+djnz r3,$
+djnz r2,decr
+djnz r1,decr1
+ret
+end
+mov 30h,a
+end
+
+
+
+#lcd
+org 0000h
+MOV TMOD,#01H        // for timer 0 mode1
+MOV A, #38H          //selecting lcd display
+ACALL COMMAND       
+MOV A, #0EH          //display is on, also cursor is on
+ACALL COMMAND    
+MOV A, #85H         //moving cursor to 85h location 
+ACALL COMMAND
+MOV DPTR, #WORD       //moving the string in data pointer  
+ BACK: MOV A, #00H    //clearing the accumulator
+MOVC A,@A+DPTR       //incrementing dptr
+JZ HERE              // jump if zero on label here
+ACALL DATA1 
+INC DPTR             
+SJMP BACK
+//HERE: SJMP HERE
+
+HERE:MOV A, #0C4H 
+ACALL COMMAND
+MOV DPTR, #WORD5
+ BACK5: MOV A, #00H
+MOVC A,@A+DPTR 
+JZ HERE5 
+ACALL DATA1
+INC DPTR
+SJMP BACK5
+HERE5: SJMP HERE5
+
+
+
+COMMAND: ACALL DELAY 
+MOV P1, A 
+CLR P2.1            // for comamnd register
+CLR P2.2            //for write the data
+SETB P2.3          //for enabling
+CLR P2.3           
+RET
+
+DATA1: ACALL DELAY
+MOV P1,A 
+SETB P2.1
+CLR P2.2
+SETB P2.3
+CLR P2.3
+RET
+
+DELAY: MOV R1,#20             // delay for 1 sec
+			REPEAT:MOV TH0,#3CH
+			MOV TL0,#0B0H
+			SETB TR0
+			CHECK:JNB TF0,CHECK
+			CLR TR0
+			CLR TF0
+			DJNZ R1,REPEAT
+			RET
+			
+WORD: DB 'IIITN',0
+WORD5: DB 'ECE DEPT.',0
+END	
